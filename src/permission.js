@@ -62,3 +62,33 @@
 //   // finish progress bar
 //   NProgress.done()
 // })
+
+import router from '@/router'
+import store from '@/store'
+import NProgress from 'nprogress' // 引入一份进度条插件
+import 'nprogress/nprogress.css' // 引入进度条样式
+const whiteList = ['/login', '/404'] // 定义白名单  所有不受权限控制的页面
+router.beforeEach((to, from, next) => {
+  NProgress.start() // 开启进度条
+  // 判断有没有token
+  if (store.getters.token) {
+    // 如果有token值，且跳转到登录页的请求，直接跳转主页
+    if (to.path === '/login') {
+      next('/')
+    } else {
+      // 有token值，跳转其他页面都被允许
+      next()
+    }
+  } else {
+    // 如果没有token,跳转的地点是白名单（不需要token的页面）允许通过
+    if (whiteList.includes(to.path)) {
+      next()
+    } else {
+      next('/login')
+    }
+  }
+  NProgress.done() // 手动强制关闭一次  为了解决 手动切换地址时  进度条的不关闭的问题
+})
+router.afterEach(() => {
+  NProgress.done() // 关闭进度条
+})
